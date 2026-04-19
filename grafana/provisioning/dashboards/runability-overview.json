@@ -1,0 +1,148 @@
+{
+  "editable": true,
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Runability Score",
+      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r._measurement == \"runability_score\" and r._field == \"score\")"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 40 },
+              { "color": "green", "value": 80 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Current AQI",
+      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r._measurement == \"air_quality_raw\" and r._field == \"aqi\")"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false }
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Weather Snapshot (Temp C)",
+      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r._measurement == \"weather_raw\" and r._field == \"temperature_c\")"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false }
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Runability Score Over Time",
+      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"runability\") |> range(start: -24h) |> filter(fn: (r) => r._measurement == \"runability_score\" and r._field == \"score\")"
+        }
+      ],
+      "options": {},
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "AQI Over Time",
+      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"runability\") |> range(start: -24h) |> filter(fn: (r) => r._measurement == \"air_quality_raw\" and r._field == \"aqi\")"
+        }
+      ],
+      "options": {},
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Temperature Over Time",
+      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"runability\") |> range(start: -24h) |> filter(fn: (r) => r._measurement == \"weather_raw\" and r._field == \"temperature_c\")"
+        }
+      ],
+      "options": {},
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Wind Speed Over Time",
+      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"runability\") |> range(start: -24h) |> filter(fn: (r) => r._measurement == \"weather_raw\" and r._field == \"wind_kmh\")"
+        }
+      ],
+      "options": {},
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        }
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["runability", "homework"],
+  "time": { "from": "now-7d", "to": "now" },
+  "timezone": "utc",
+  "title": "Runability Homework Dashboard",
+  "uid": "runability-overview",
+  "version": 3
+}

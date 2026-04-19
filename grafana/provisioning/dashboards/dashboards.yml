@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: RunabilityDashboards
+    orgId: 1
+    folder: Runability
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
