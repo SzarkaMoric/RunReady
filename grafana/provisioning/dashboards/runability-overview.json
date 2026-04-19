@@ -3,7 +3,7 @@
   "panels": [
     {
       "id": 1,
-      "type": "stat",
+      "type": "gauge",
       "title": "Runability Score",
       "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
       "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
@@ -14,17 +14,27 @@
         }
       ],
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false }
+        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "minVizWidth": 75,
+        "minVizHeight": 75
       },
       "fieldConfig": {
         "defaults": {
+          "min": 0,
+          "max": 100,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "color": "red", "value": null },
-              { "color": "orange", "value": 40 },
+              { "color": "yellow", "value": 40 },
               { "color": "green", "value": 80 }
             ]
+          },
+          "custom": {
+            "hideFrom": { "tooltip": false, "viz": false, "legend": false }
           }
         }
       }

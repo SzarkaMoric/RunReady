@@ -87,17 +87,17 @@ def main() -> None:
                     aqi=aqi,
                     temp_c=weather["temperature_c"],
                     wind_kmh=weather["wind_kmh"],
-                    precip_mm=weather["precip_mm"],
+                    precip_mm=weather["precip_mm"], 
                 )
                 advice = recommendation(score)
                 now = datetime.now(timezone.utc)
 
-                common_tags = {"location_id": location_id, "location_name": location_name}
+                # common_tags = {"location_id": location_id, "location_name": location_name} # maybe this is not important
                 point_aqi = Point("air_quality_raw").time(now).tag("source", "waqi")
                 point_weather = Point("weather_raw").time(now).tag("source", "open_meteo")
                 point_score = Point("runability_score").time(now).tag("model_version", "v1")
 
-                for k, v in common_tags.items():
+                for k, v in common_tags.items():    
                     point_aqi = point_aqi.tag(k, v)
                     point_weather = point_weather.tag(k, v)
                     point_score = point_score.tag(k, v)
