@@ -307,13 +307,13 @@
     {
       "id": 14,
       "type": "table",
-      "title": "Today Hourly Forecast",
+      "title": "Next 24 Hours Forecast",
       "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
       "gridPos": { "h": 10, "w": 24, "x": 0, "y": 40 },
       "targets": [
         {
           "refId": "A",
-          "query": "from(bucket: \"runability\") |> range(start: -1h, stop: 24h) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_forecast_hourly\") |> filter(fn: (r) => contains(value: r._field, set: [\"temperature_c\", \"humidity\", \"wind_kmh\", \"precip_mm\"])) |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\") |> keep(columns: [\"_time\", \"temperature_c\", \"humidity\", \"precip_mm\", \"wind_kmh\"]) |> sort(columns: [\"_time\"])"
+          "query": "from(bucket: \"runability\") |> range(start: now(), stop: 24h) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_forecast_hourly\") |> filter(fn: (r) => contains(value: r._field, set: [\"temperature_c\", \"humidity\", \"wind_kmh\", \"precip_mm\"])) |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\") |> keep(columns: [\"_time\", \"temperature_c\", \"humidity\", \"precip_mm\", \"wind_kmh\"]) |> sort(columns: [\"_time\"])"
         }
       ],
       "options": {

@@ -202,7 +202,7 @@ def fetch_openmeteo_hourly_forecast(latitude: float, longitude: float) -> list[d
         "longitude": longitude,
         "hourly": "temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation",
         "timezone": "UTC",
-        "forecast_days": 1,
+        "forecast_days": 2,
     }
     payload = requests.get("https://api.open-meteo.com/v1/forecast", params=params, timeout=10).json()
     hourly = payload["hourly"]
