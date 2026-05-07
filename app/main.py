@@ -1,12 +1,52 @@
+import json
 import math
 import os
+import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import parse_qs, urlparse
 
 import requests
 from dotenv import load_dotenv
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
+
+
+collection_lock = threading.Lock()
+
+LOCATION_PRESETS = {
+    "bme_campus": {
+        "location_id": "bme_campus",
+        "location_name": "BME Campus",
+        "latitude": 47.4791,
+        "longitude": 19.0579,
+    },
+    "budapest_downtown": {
+        "location_id": "budapest_downtown",
+        "location_name": "Budapest Downtown",
+        "latitude": 47.4979,
+        "longitude": 19.0402,
+    },
+    "margaret_island": {
+        "location_id": "margaret_island",
+        "location_name": "Margaret Island",
+        "latitude": 47.5281,
+        "longitude": 19.0500,
+    },
+    "kopaszi_gat": {
+        "location_id": "kopaszi_gat",
+        "location_name": "Kopaszi-gat",
+        "latitude": 47.4685,
+        "longitude": 19.0624,
+    },
+    "obuda": {
+        "location_id": "obuda",
+        "location_name": "Óbuda (3rd District)",
+        "latitude": 47.5410,
+        "longitude": 19.0450,
+    },
+}
 
 
 def clamp_score(value: float) -> float: 
@@ -27,16 +67,28 @@ def rain_score(precip_mm: float) -> float:
     return 1 / (1 + (precip_mm / 1.5) ** 2)
 
 
-def rain_status(precip_mm: float) -> str:
+def rain_status(precip_mm: float, rain_soon: bool = False) -> str:
     if precip_mm > 0:
-        return "Raining"
+        return "Raining now"
+    if rain_soon:
+        return "Rain soon"
     return "Not raining"
 
 
-def rain_status_code(precip_mm: float) -> int:
+def rain_status_code(precip_mm: float, rain_soon: bool = False) -> int:
     if precip_mm > 0:
+        return 2
+    if rain_soon:
         return 1
     return 0
+
+
+def rain_expected_soon(forecast: list[dict], current_time: datetime, hours: int = 2) -> bool:
+    window_end = current_time + timedelta(hours=hours)
+    return any(
+        current_time < forecast_row["time"] <= window_end and forecast_row["precip_mm"] > 0
+        for forecast_row in forecast
+    )
 
 
 def aqi_score(aqi: float) -> float:
@@ -69,7 +121,7 @@ def calculate_runability_score(aqi: float, temp_c: float, humidity: float, wind_
     return clamp_score(score)
 
 
-def score_explanation(score: float, components: dict) -> tuple[str, str]:
+def score_explanation(score: float, components: dict) -> tuple[str, str, str]:
     weakest_factor = min(components, key=components.get).replace("_", " ")
 
     if score >= 80:
@@ -226,135 +278,267 @@ def score_status_code(score: float) -> int:
     return 0
 
 
-def main() -> None:
+def load_config() -> dict:
     load_dotenv()
-    waqi_token = os.getenv("WAQI_TOKEN", "demo")
-    city_slug = os.getenv("WAQI_CITY_SLUG", "budapest")
-    location_id = os.getenv("LOCATION_ID", "uni_main")
-    location_name = os.getenv("LOCATION_NAME", "University")
-    latitude = float(os.getenv("LATITUDE", "47.4979"))
-    longitude = float(os.getenv("LONGITUDE", "19.0402"))
-    influx_url = os.getenv("INFLUX_URL", "http://influxdb:8086")
-    influx_token = os.getenv("INFLUX_TOKEN", "runability-super-secret-token")
-    influx_org = os.getenv("INFLUX_ORG", "runability")
-    influx_bucket = os.getenv("INFLUX_BUCKET", "runability")
+    return {
+        "waqi_token": os.getenv("WAQI_TOKEN", "demo"),
+        "city_slug": os.getenv("WAQI_CITY_SLUG", "budapest"),
+        "location_id": os.getenv("LOCATION_ID", "uni_main"),
+        "location_name": os.getenv("LOCATION_NAME", "University"),
+        "latitude": float(os.getenv("LATITUDE", "47.4979")),
+        "longitude": float(os.getenv("LONGITUDE", "19.0402")),
+        "influx_url": os.getenv("INFLUX_URL", "http://influxdb:8086"),
+        "influx_token": os.getenv("INFLUX_TOKEN", "runability-super-secret-token"),
+        "influx_org": os.getenv("INFLUX_ORG", "runability"),
+        "influx_bucket": os.getenv("INFLUX_BUCKET", "runability"),
+    }
 
-    client = InfluxDBClient(url=influx_url, token=influx_token, org=influx_org)
+
+def resolve_location_config(config: dict, requested_location_id: str | None = None) -> dict:
+    location = dict(config)
+    if requested_location_id:
+        preset = LOCATION_PRESETS.get(requested_location_id)
+        if not preset:
+            raise ValueError(f"Unknown location_id: {requested_location_id}")
+        location.update(preset)
+        location["city_slug"] = f"geo:{preset['latitude']};{preset['longitude']}"
+    return location
+
+
+def collect_once(config: dict, writer, requested_location_id: str | None = None) -> dict:
+    with collection_lock:
+        location_config = resolve_location_config(config, requested_location_id)
+        aqi = fetch_waqi_current(location_config["waqi_token"], location_config["city_slug"])
+        weather = fetch_openmeteo_current(location_config["latitude"], location_config["longitude"])
+        forecast = fetch_openmeteo_hourly_forecast(location_config["latitude"], location_config["longitude"])
+        daily_forecast = fetch_openmeteo_daily_forecast(location_config["latitude"], location_config["longitude"])
+        components = score_components(
+            aqi=aqi,
+            temp_c=weather["temperature_c"],
+            humidity=weather["humidity"],
+            wind_kmh=weather["wind_kmh"],
+            precip_mm=weather["precip_mm"],
+        )
+        score = calculate_runability_score(
+            aqi=aqi,
+            temp_c=weather["temperature_c"],
+            humidity=weather["humidity"],
+            wind_kmh=weather["wind_kmh"],
+            precip_mm=weather["precip_mm"],
+        )
+        advice = recommendation(score)
+        weakest_factor, status, explanation = score_explanation(score, components)
+        reason_code, reason_text = limiting_reason(
+            temp_c=weather["temperature_c"],
+            humidity=weather["humidity"],
+            wind_kmh=weather["wind_kmh"],
+            precip_mm=weather["precip_mm"],
+            weakest_factor=weakest_factor,
+        )
+        now = datetime.now(timezone.utc)
+        rain_soon = rain_expected_soon(forecast, now)
+
+        common_tags = {
+            "location_id": location_config["location_id"],
+            "location_name": location_config["location_name"],
+        }
+        point_aqi = Point("air_quality_raw").time(now).tag("source", "waqi")
+        point_weather = Point("weather_raw").time(now).tag("source", "open_meteo")
+        point_score = Point("runability_score").time(now).tag("model_version", "v1")
+        forecast_points = []
+        runability_forecast_points = []
+        daily_forecast_points = []
+
+        for k, v in common_tags.items():
+            point_aqi = point_aqi.tag(k, v)
+            point_weather = point_weather.tag(k, v)
+            point_score = point_score.tag(k, v)
+
+        point_aqi = point_aqi.field("aqi", aqi)
+        point_weather = (
+            point_weather.field("temperature_c", weather["temperature_c"])
+            .field("humidity", weather["humidity"])
+            .field("wind_kmh", weather["wind_kmh"])
+            .field("precip_mm", weather["precip_mm"])
+            .field("rain_status", rain_status(weather["precip_mm"], rain_soon))
+            .field("rain_status_code", rain_status_code(weather["precip_mm"], rain_soon))
+        )
+        point_score = (
+            point_score.field("score", score)
+            .field("latitude", location_config["latitude"])
+            .field("longitude", location_config["longitude"])
+            .field("recommendation_text", advice)
+            .field("recommendation_code", recommendation_code(score))
+            .field("score_status", status)
+            .field("score_status_code", score_status_code(score))
+            .field("limiting_reason_code", reason_code)
+            .field("limiting_reason_text", reason_text)
+            .field("weakest_factor", weakest_factor)
+            .field("score_explanation", explanation)
+        )
+        for component_name, component_score in components.items():
+            point_score = point_score.field(f"{component_name}_score", round(component_score * 100, 2))
+
+        for forecast_row in forecast:
+            forecast_score = calculate_runability_score(
+                aqi=aqi,
+                temp_c=forecast_row["temperature_c"],
+                humidity=forecast_row["humidity"],
+                wind_kmh=forecast_row["wind_kmh"],
+                precip_mm=forecast_row["precip_mm"],
+            )
+            point_forecast = (
+                Point("weather_forecast_hourly")
+                .time(forecast_row["time"])
+                .tag("source", "open_meteo")
+                .field("temperature_c", forecast_row["temperature_c"])
+                .field("humidity", forecast_row["humidity"])
+                .field("wind_kmh", forecast_row["wind_kmh"])
+                .field("precip_mm", forecast_row["precip_mm"])
+                .field("rain_status_code", rain_status_code(forecast_row["precip_mm"]))
+            )
+            point_runability_forecast = (
+                Point("runability_forecast_hourly")
+                .time(forecast_row["time"])
+                .tag("source", "open_meteo")
+                .tag("model_version", "v1")
+                .field("score", forecast_score)
+                .field("estimated_aqi", aqi)
+                .field("temperature_c", forecast_row["temperature_c"])
+                .field("humidity", forecast_row["humidity"])
+                .field("wind_kmh", forecast_row["wind_kmh"])
+                .field("precip_mm", forecast_row["precip_mm"])
+            )
+            for k, v in common_tags.items():
+                point_forecast = point_forecast.tag(k, v)
+                point_runability_forecast = point_runability_forecast.tag(k, v)
+            forecast_points.append(point_forecast)
+            runability_forecast_points.append(point_runability_forecast)
+
+        for forecast_row in daily_forecast:
+            point_daily_forecast = (
+                Point("weather_forecast_daily")
+                .time(forecast_row["time"])
+                .tag("source", "open_meteo")
+                .field("temp_min_c", forecast_row["temp_min_c"])
+                .field("temp_max_c", forecast_row["temp_max_c"])
+                .field("precip_sum_mm", forecast_row["precip_sum_mm"])
+                .field("wind_max_kmh", forecast_row["wind_max_kmh"])
+                .field("rain_status_code", rain_status_code(forecast_row["precip_sum_mm"]))
+            )
+            for k, v in common_tags.items():
+                point_daily_forecast = point_daily_forecast.tag(k, v)
+            daily_forecast_points.append(point_daily_forecast)
+
+        writer.write(
+            bucket=config["influx_bucket"],
+            org=config["influx_org"],
+            record=[
+                point_aqi,
+                point_weather,
+                point_score,
+                *forecast_points,
+                *runability_forecast_points,
+                *daily_forecast_points,
+            ],
+        )
+
+        result = {
+            "time": now.isoformat(),
+            "location_id": location_config["location_id"],
+            "location_name": location_config["location_name"],
+            "latitude": location_config["latitude"],
+            "longitude": location_config["longitude"],
+            "aqi": aqi,
+            "temperature_c": weather["temperature_c"],
+            "humidity": weather["humidity"],
+            "wind_kmh": weather["wind_kmh"],
+            "precip_mm": weather["precip_mm"],
+            "score": score,
+            "recommendation": advice,
+            "limiting_reason": reason_text,
+            "hourly_forecast_points": len(forecast_points),
+            "runability_forecast_points": len(runability_forecast_points),
+            "daily_forecast_points": len(daily_forecast_points),
+        }
+
+        print(f"[{now}] Location: {location_config['location_name']} ({location_config['location_id']})")
+        print(f"[{now}] AQI: {aqi}")
+        print(
+            f"[{now}] Temp: {weather['temperature_c']} C | Humidity: {weather['humidity']}% "
+            f"| Wind: {weather['wind_kmh']} km/h | Rain: {weather['precip_mm']} mm"
+        )
+        print(f"[{now}] Runability Score: {score} -> {advice}")
+        print(f"[{now}] {explanation}")
+        print(f"[{now}] Limiting reason: {reason_text}")
+        print(f"[{now}] Stored {len(forecast_points)} hourly forecast points")
+        print(f"[{now}] Stored {len(runability_forecast_points)} hourly runability forecast points")
+        print(f"[{now}] Stored {len(daily_forecast_points)} daily forecast points")
+
+        return result
+
+
+def start_collect_server(config: dict, writer) -> HTTPServer:
+    class CollectHandler(BaseHTTPRequestHandler):
+        def _send_json(self, status: int, body: dict) -> None:
+            payload = json.dumps(body).encode("utf-8")
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.end_headers()
+            self.wfile.write(payload)
+
+        def do_OPTIONS(self) -> None:
+            self._send_json(200, {"ok": True})
+
+        def do_GET(self) -> None:
+            self._handle_collect()
+
+        def do_POST(self) -> None:
+            self._handle_collect()
+
+        def _handle_collect(self) -> None:
+            parsed_url = urlparse(self.path)
+            if parsed_url.path not in ("/collect", "/collect/"):
+                self._send_json(404, {"ok": False, "error": "Not found"})
+                return
+            params = parse_qs(parsed_url.query)
+            requested_location_id = params.get("location_id", [None])[0]
+            try:
+                self._send_json(200, {"ok": True, "data": collect_once(config, writer, requested_location_id)})
+            except Exception as exc:
+                self._send_json(500, {"ok": False, "error": str(exc)})
+
+        def log_message(self, format: str, *args) -> None:
+            print(f"[collect-api] {self.address_string()} - {format % args}")
+
+    server = HTTPServer(("0.0.0.0", 8000), CollectHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    print("Collect API listening on http://0.0.0.0:8000/collect")
+    return server
+
+
+def collect_all_locations(config: dict, writer) -> None:
+    for location_id in LOCATION_PRESETS:
+        try:
+            collect_once(config, writer, location_id)
+        except Exception as exc:
+            print(f"Error collecting {location_id}: {exc}")
+
+
+def main() -> None:
+    config = load_config()
+    client = InfluxDBClient(url=config["influx_url"], token=config["influx_token"], org=config["influx_org"])
     writer = client.write_api(write_options=SYNCHRONOUS)
+    server = start_collect_server(config, writer)
 
     try:
         while True:
             try:
-                aqi = fetch_waqi_current(waqi_token, city_slug)
-                weather = fetch_openmeteo_current(latitude, longitude)
-                forecast = fetch_openmeteo_hourly_forecast(latitude, longitude)
-                daily_forecast = fetch_openmeteo_daily_forecast(latitude, longitude)
-                components = score_components(
-                    aqi=aqi,
-                    temp_c=weather["temperature_c"],
-                    humidity=weather["humidity"],
-                    wind_kmh=weather["wind_kmh"],
-                    precip_mm=weather["precip_mm"],
-                )
-                score = calculate_runability_score(
-                    aqi=aqi,
-                    temp_c=weather["temperature_c"],
-                    humidity=weather["humidity"],
-                    wind_kmh=weather["wind_kmh"],
-                    precip_mm=weather["precip_mm"],
-                )
-                advice = recommendation(score)
-                weakest_factor, status, explanation = score_explanation(score, components)
-                reason_code, reason_text = limiting_reason(
-                    temp_c=weather["temperature_c"],
-                    humidity=weather["humidity"],
-                    wind_kmh=weather["wind_kmh"],
-                    precip_mm=weather["precip_mm"],
-                    weakest_factor=weakest_factor,
-                )
-                now = datetime.now(timezone.utc)
-
-                common_tags = {"location_id": location_id, "location_name": location_name}
-                point_aqi = Point("air_quality_raw").time(now).tag("source", "waqi")
-                point_weather = Point("weather_raw").time(now).tag("source", "open_meteo")
-                point_score = Point("runability_score").time(now).tag("model_version", "v1")
-                forecast_points = []
-                daily_forecast_points = []
-
-                for k, v in common_tags.items():    
-                    point_aqi = point_aqi.tag(k, v)
-                    point_weather = point_weather.tag(k, v)
-                    point_score = point_score.tag(k, v)
-
-                point_aqi = point_aqi.field("aqi", aqi)
-                point_weather = (
-                    point_weather.field("temperature_c", weather["temperature_c"])
-                    .field("humidity", weather["humidity"])
-                    .field("wind_kmh", weather["wind_kmh"])
-                    .field("precip_mm", weather["precip_mm"])
-                    .field("rain_status", rain_status(weather["precip_mm"]))
-                    .field("rain_status_code", rain_status_code(weather["precip_mm"]))
-                )
-                point_score = (
-                    point_score.field("score", score)
-                    .field("recommendation_text", advice)
-                    .field("recommendation_code", recommendation_code(score))
-                    .field("score_status", status)
-                    .field("score_status_code", score_status_code(score))
-                    .field("limiting_reason_code", reason_code)
-                    .field("limiting_reason_text", reason_text)
-                    .field("weakest_factor", weakest_factor)
-                    .field("score_explanation", explanation)
-                )
-                for component_name, component_score in components.items():
-                    point_score = point_score.field(f"{component_name}_score", round(component_score * 100, 2))
-
-                for forecast_row in forecast:
-                    point_forecast = (
-                        Point("weather_forecast_hourly")
-                        .time(forecast_row["time"])
-                        .tag("source", "open_meteo")
-                        .field("temperature_c", forecast_row["temperature_c"])
-                        .field("humidity", forecast_row["humidity"])
-                        .field("wind_kmh", forecast_row["wind_kmh"])
-                        .field("precip_mm", forecast_row["precip_mm"])
-                        .field("rain_status_code", rain_status_code(forecast_row["precip_mm"]))
-                    )
-                    for k, v in common_tags.items():
-                        point_forecast = point_forecast.tag(k, v)
-                    forecast_points.append(point_forecast)
-
-                for forecast_row in daily_forecast:
-                    point_daily_forecast = (
-                        Point("weather_forecast_daily")
-                        .time(forecast_row["time"])
-                        .tag("source", "open_meteo")
-                        .field("temp_min_c", forecast_row["temp_min_c"])
-                        .field("temp_max_c", forecast_row["temp_max_c"])
-                        .field("precip_sum_mm", forecast_row["precip_sum_mm"])
-                        .field("wind_max_kmh", forecast_row["wind_max_kmh"])
-                        .field("rain_status_code", rain_status_code(forecast_row["precip_sum_mm"]))
-                    )
-                    for k, v in common_tags.items():
-                        point_daily_forecast = point_daily_forecast.tag(k, v)
-                    daily_forecast_points.append(point_daily_forecast)
-
-                writer.write(
-                    bucket=influx_bucket,
-                    org=influx_org,
-                    record=[point_aqi, point_weather, point_score, *forecast_points, *daily_forecast_points],
-                )
-
-                print(f"[{now}] AQI: {aqi}")
-                print(
-                    f"[{now}] Temp: {weather['temperature_c']} C | Humidity: {weather['humidity']}% "
-                    f"| Wind: {weather['wind_kmh']} km/h | Rain: {weather['precip_mm']} mm"
-                )
-                print(f"[{now}] Runability Score: {score} -> {advice}")
-                print(f"[{now}] {explanation}")
-                print(f"[{now}] Limiting reason: {reason_text}")
-                print(f"[{now}] Stored {len(forecast_points)} hourly forecast points")
-                print(f"[{now}] Stored {len(daily_forecast_points)} daily forecast points")
+                collect_all_locations(config, writer)
                 print("Sleeping for 15 minutes...")
 
             except Exception as e:
@@ -368,6 +552,7 @@ def main() -> None:
     except KeyboardInterrupt:
         print("Shutting down...")
     finally:
+        server.shutdown()
         client.close()
 
 
