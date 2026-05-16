@@ -5,9 +5,13 @@ This is a **small homework project** using Python + InfluxDB + Grafana.
 It does one simple flow:
 1. Read current AQI from WAQI
 2. Read current weather from Open-Meteo
-3. Compute one current Runability Score (0-100)
-4. Save values to InfluxDB
-5. Show them in Grafana
+3. Read today hourly and 7-day weather forecasts from Open-Meteo
+4. Compute one current Runability Score (0-100) from AQI, temperature, humidity, and wind
+5. Save values to InfluxDB
+6. Show them in Grafana
+
+The Grafana dashboard has a **Location** dropdown and an **Update now** button. The button triggers an immediate collection for the selected location through the app endpoint at `http://localhost:8000/collect`.
+It also includes a Geomap panel that places all preset locations on a map and colors markers by the latest Runability Score.
 
 ## Files You Need to Understand
 
@@ -38,8 +42,11 @@ It does one simple flow:
 ## What Gets Stored in InfluxDB
 
 - `air_quality_raw` with `aqi`
-- `weather_raw` with `temperature_c`, `wind_kmh`, `precip_mm`
-- `runability_score` with `score`, `recommendation_text`
+- `weather_raw` with `temperature_c`, `humidity`, `wind_kmh`, `precip_mm`, `rain_status`, `rain_status_code`
+- `weather_forecast_hourly` with hourly `temperature_c`, `humidity`, `wind_kmh`, `precip_mm`
+- `runability_forecast_hourly` with hourly forecast `score`, estimated from forecast weather and the latest measured AQI
+- `weather_forecast_daily` with daily `temp_min_c`, `temp_max_c`, `precip_sum_mm`, `wind_max_kmh`
+- `runability_score` with `score`, `latitude`, `longitude`, `score_status`, `score_status_code`, `recommendation_text`, `recommendation_code`, `limiting_reason_text`, `limiting_reason_code`, `score_explanation`, `weakest_factor`, and component score fields
 
 ## Expected Output Example
 
