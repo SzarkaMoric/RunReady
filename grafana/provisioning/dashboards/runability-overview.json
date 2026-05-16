@@ -1,324 +1,1146 @@
 {
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
   "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
   "panels": [
     {
-      "id": 1,
-      "type": "gauge",
-      "title": "Runability Score",
-      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
-      "gridPos": { "h": 8, "w": 4, "x": 0, "y": 0 },
-      "targets": [
-        {
-          "refId": "A",
-          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"runability_score\" and r._field == \"score\") |> last()"
-        }
-      ],
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
-        "orientation": "auto",
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "minVizWidth": 75,
-        "minVizHeight": 75
+      "datasource": {
+        "type": "influxdb",
+        "uid": "RunabilityInflux"
       },
       "fieldConfig": {
         "defaults": {
-          "min": 0,
+          "mappings": [],
           "max": 100,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 40 },
-              { "color": "green", "value": 80 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 40
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
             ]
-          },
-          "custom": {
-            "hideFrom": { "tooltip": false, "viz": false, "legend": false }
           }
-        }
-      }
-    },
-    {
-      "id": 2,
-      "type": "stat",
-      "title": "Current AQI",
-      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
-      "gridPos": { "h": 8, "w": 4, "x": 4, "y": 0 },
-      "targets": [
-        {
-          "refId": "A",
-          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"air_quality_raw\" and r._field == \"aqi\") |> last()"
-        }
-      ],
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false }
-      }
-    },
-    {
-      "id": 3,
-      "type": "stat",
-      "title": "Weather Snapshot (Temp C)",
-      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
-      "gridPos": { "h": 8, "w": 4, "x": 8, "y": 0 },
-      "targets": [
-        {
-          "refId": "A",
-          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_raw\" and r._field == \"temperature_c\") |> last()"
-        }
-      ],
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false }
+        },
+        "overrides": []
       },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "celsius"
-        }
-      }
-    },
-    {
-      "id": 8,
-      "type": "stat",
-      "title": "Rain Status",
-      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
-      "gridPos": { "h": 8, "w": 4, "x": 12, "y": 0 },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.1.0",
       "targets": [
         {
-          "refId": "A",
-          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_raw\" and r._field == \"rain_status_code\") |> last()"
+          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"runability_score\" and r._field == \"score\") |> last()",
+          "refId": "A"
         }
       ],
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "textMode": "value",
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false }
+      "title": "Runability Score",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "RunabilityInflux"
       },
       "fieldConfig": {
         "defaults": {
           "mappings": [
             {
-              "type": "value",
               "options": {
-                "0": { "color": "green", "index": 0, "text": "Not raining" },
-                "1": { "color": "yellow", "index": 1, "text": "Rain soon" },
-                "2": { "color": "blue", "index": 2, "text": "Raining now" }
-              }
+                "0": {
+                  "color": "red",
+                  "index": 0,
+                  "text": "Not recommended now"
+                },
+                "1": {
+                  "color": "orange",
+                  "index": 1,
+                  "text": "Short/light activity only"
+                },
+                "2": {
+                  "color": "yellow",
+                  "index": 2,
+                  "text": "Okay with caution"
+                },
+                "3": {
+                  "color": "green",
+                  "index": 3,
+                  "text": "Great for run/walk"
+                }
+              },
+              "type": "value"
             }
           ],
-          "custom": {}
-        }
-      }
-    },
-    {
-      "id": 13,
-      "type": "stat",
-      "title": "Current Wind (km/h)",
-      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
-      "gridPos": { "h": 8, "w": 4, "x": 16, "y": 0 },
-      "targets": [
-        {
-          "refId": "A",
-          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_raw\" and r._field == \"wind_kmh\") |> last()"
-        }
-      ],
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false }
-      }
-    },
-    {
-      "id": 16,
-      "type": "text",
-      "title": "Manual Update",
-      "gridPos": { "h": 8, "w": 4, "x": 20, "y": 0 },
-      "options": {
-        "mode": "html",
-        "content": "<form id=\"collect-form\" action=\"http://localhost:8000/collect\" method=\"post\" target=\"collect-frame\"><button id=\"collect-now\" type=\"submit\" style=\"width:100%;height:64px;border:0;border-radius:6px;background:#2563eb;color:white;font-size:22px;font-weight:700;cursor:pointer;\">Update now</button></form><iframe name=\"collect-frame\" style=\"display:none;\"></iframe><div id=\"collect-status\" style=\"margin-top:10px;text-align:center;font-size:14px;\">Ready</div><script>\n(function () {\n  const form = document.getElementById('collect-form');\n  const button = document.getElementById('collect-now');\n  const status = document.getElementById('collect-status');\n  if (!form || !button || !status) return;\n  function selectedLocationId() {\n    const params = new URLSearchParams(window.location.search);\n    return params.get('var-location_id') || 'bme_campus';\n  }\n  form.onsubmit = async function (event) {\n    event.preventDefault();\n    button.disabled = true;\n    button.style.opacity = '0.65';\n    status.textContent = 'Collecting...';\n    try {\n      const locationId = encodeURIComponent(selectedLocationId());\n      const response = await fetch('http://localhost:8000/collect?location_id=' + locationId, { method: 'POST' });\n      const payload = await response.json();\n      if (!response.ok || !payload.ok) throw new Error(payload.error || 'Request failed');\n      status.textContent = 'Updated. Refreshing dashboard...';\n      setTimeout(function () { window.location.reload(); }, 800);\n    } catch (error) {\n      status.textContent = 'Failed: ' + error.message;\n      button.disabled = false;\n      button.style.opacity = '1';\n    }\n  };\n})();\n</script>"
-      }
-    },
-    {
-      "id": 17,
-      "type": "geomap",
-      "title": "Smart City Runability Map",
-      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 14 },
-      "targets": [
-        {
-          "refId": "A",
-          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r._measurement == \"runability_score\") |> filter(fn: (r) => contains(value: r.location_id, set: [\"bme_campus\", \"budapest_downtown\", \"margaret_island\", \"kopaszi_gat\", \"obuda\"])) |> filter(fn: (r) => contains(value: r._field, set: [\"score\", \"latitude\", \"longitude\"])) |> group(columns: [\"location_id\", \"location_name\", \"_field\"]) |> last() |> group() |> pivot(rowKey: [\"location_id\", \"location_name\"], columnKey: [\"_field\"], valueColumn: \"_value\") |> filter(fn: (r) => exists r.latitude and exists r.longitude and exists r.score) |> keep(columns: [\"location_id\", \"location_name\", \"latitude\", \"longitude\", \"score\"])"
-        }
-      ],
-      "options": {
-        "view": { "id": "coords", "lat": 47.4979, "lon": 19.0500, "zoom": 12 },
-        "controls": {
-          "showZoom": true,
-          "showAttribution": true,
-          "showScale": true,
-          "showMeasure": false,
-          "showDebug": false
-        },
-        "tooltip": { "mode": "details" },
-        "layers": [
-          {
-            "type": "markers",
-            "name": "Runability locations",
-            "location": {
-              "mode": "coords",
-              "latitude": "latitude",
-              "longitude": "longitude"
-            },
-            "config": {
-              "showLegend": true,
-              "style": {
-                "size": { "fixed": 14, "min": 8, "max": 22 },
-                "color": { "field": "score", "fixed": "green" }
-              }
-            }
-          }
-        ]
-      },
-      "fieldConfig": {
-        "defaults": {
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 40 },
-              { "color": "green", "value": 70 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
             ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 6,
+        "y": 0
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"runability_score\" and r._field == \"recommendation_code\") |> last()",
+          "refId": "A"
+        }
+      ],
+      "title": "Recommendation",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "RunabilityInflux"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 4,
+        "x": 10,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"air_quality_raw\" and r._field == \"aqi\") |> last()",
+          "refId": "A"
+        }
+      ],
+      "title": "Current AQI",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "RunabilityInflux"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 5,
+        "x": 14,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_raw\" and r._field == \"temperature_c\") |> last()",
+          "refId": "A"
+        }
+      ],
+      "title": "Weather Snapshot (Temp C)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "RunabilityInflux"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 5,
+        "x": 19,
+        "y": 0
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_raw\" and r._field == \"wind_kmh\") |> last()",
+          "refId": "A"
+        }
+      ],
+      "title": "Current Wind (km/h)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "RunabilityInflux"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "Good"
+                },
+                "1": {
+                  "color": "blue",
+                  "index": 1,
+                  "text": "Low temp"
+                },
+                "2": {
+                  "color": "orange",
+                  "index": 2,
+                  "text": "High temp"
+                },
+                "3": {
+                  "color": "red",
+                  "index": 3,
+                  "text": "Bad air"
+                },
+                "4": {
+                  "color": "orange",
+                  "index": 4,
+                  "text": "High humidity"
+                },
+                "5": {
+                  "color": "blue",
+                  "index": 5,
+                  "text": "Raining"
+                },
+                "6": {
+                  "color": "yellow",
+                  "index": 6,
+                  "text": "Windy"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 6,
+        "y": 3
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"runability_score\" and r._field == \"limiting_reason_code\") |> last()",
+          "refId": "A"
+        }
+      ],
+      "title": "Limiting Reason",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "RunabilityInflux"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "Not raining"
+                },
+                "1": {
+                  "color": "yellow",
+                  "index": 1,
+                  "text": "Rain soon"
+                },
+                "2": {
+                  "color": "blue",
+                  "index": 2,
+                  "text": "Raining now"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 6,
+        "y": 6
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_raw\" and r._field == \"rain_status_code\") |> last()",
+          "refId": "A"
+        }
+      ],
+      "title": "Rain Status",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "RunabilityInflux"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 3,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "area"
+            }
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 40
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Current time"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "points"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 10
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 0
+              },
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": true,
+                  "tooltip": false,
+                  "viz": false
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 16,
+        "x": 0,
+        "y": 9
+      },
+      "id": 19,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "query": "measured = from(bucket: \"runability\") |> range(start: v.timeRangeStart, stop: now()) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"runability_score\" and r._field == \"score\") |> keep(columns: [\"_time\", \"_value\"]) |> set(key: \"_field\", value: \"Runability\")\nforecast = from(bucket: \"runability\") |> range(start: now(), stop: v.timeRangeStop) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"runability_forecast_hourly\" and r._field == \"score\") |> keep(columns: [\"_time\", \"_value\"]) |> set(key: \"_field\", value: \"Runability\")\nunion(tables: [measured, forecast]) |> group(columns: [\"_field\"]) |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        },
+        {
+          "query": "from(bucket: \"runability\") |> range(start: v.timeRangeStart, stop: now()) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"runability_score\" and r._field == \"score\") |> last() |> map(fn: (r) => ({ r with _time: now(), _field: \"Current time\" }))",
+          "refId": "B"
+        }
+      ],
+      "title": "Runability: Measured + Forecast",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "RunabilityInflux"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 40
+              },
+              {
+                "color": "green",
+                "value": 75
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "temperature_score"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Temp"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "humidity_score"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Humidity"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "wind_score"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Wind"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "air_quality_score"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Air"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "rain_score"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Rain"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 9
+      },
+      "id": 12,
+      "options": {
+        "displayMode": "gradient",
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"runability_score\") |> filter(fn: (r) => contains(value: r._field, set: [\"temperature_score\", \"humidity_score\", \"wind_score\", \"air_quality_score\", \"rain_score\"])) |> last()",
+          "refId": "A"
+        }
+      ],
+      "title": "Score Factors",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "RunabilityInflux"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
           },
           "links": [
             {
+              "targetBlank": false,
               "title": "Open this location",
-              "url": "/d/runability-overview/runability-homework-dashboard?orgId=1&var-location_id=${__data.fields.location_id}",
-              "targetBlank": false
+              "url": "/d/runability-overview/runability-homework-dashboard?orgId=1&var-location_id=${__data.fields.location_id}"
             }
           ],
-          "custom": {}
-        }
-      }
-    },
-    {
-      "id": 18,
-      "type": "timeseries",
-      "title": "Temperature: Measured + Forecast",
-      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
-      "targets": [
-        {
-          "refId": "A",
-          "query": "measured = from(bucket: \"runability\") |> range(start: v.timeRangeStart, stop: now()) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_raw\" and r._field == \"temperature_c\") |> keep(columns: [\"_time\", \"_value\"]) |> set(key: \"_field\", value: \"Temperature\")\nforecast = from(bucket: \"runability\") |> range(start: now(), stop: v.timeRangeStop) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_forecast_hourly\" and r._field == \"temperature_c\") |> keep(columns: [\"_time\", \"_value\"]) |> set(key: \"_field\", value: \"Temperature\")\nunion(tables: [measured, forecast]) |> group(columns: [\"_field\"]) |> sort(columns: [\"_time\"])"
-        },
-        {
-          "refId": "B",
-          "query": "from(bucket: \"runability\") |> range(start: v.timeRangeStart, stop: now()) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_raw\" and r._field == \"temperature_c\") |> last() |> map(fn: (r) => ({ r with _time: now(), _field: \"Current time\" }))"
-        }
-      ],
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "celsius",
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "linear",
-            "lineWidth": 3,
-            "fillOpacity": 8,
-            "showPoints": "auto",
-            "pointSize": 5,
-            "spanNulls": true
-          }
-        },
-        "overrides": [
-          {
-            "matcher": { "id": "byName", "options": "Current time" },
-            "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } },
-              { "id": "custom.drawStyle", "value": "points" },
-              { "id": "custom.pointSize", "value": 10 },
-              { "id": "custom.showPoints", "value": "always" },
-              { "id": "custom.lineWidth", "value": 0 },
-              { "id": "custom.hideFrom", "value": { "tooltip": false, "viz": false, "legend": true } }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": 19,
-      "type": "timeseries",
-      "title": "Runability: Measured + Forecast",
-      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 32 },
-      "targets": [
-        {
-          "refId": "A",
-          "query": "measured = from(bucket: \"runability\") |> range(start: v.timeRangeStart, stop: now()) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"runability_score\" and r._field == \"score\") |> keep(columns: [\"_time\", \"_value\"]) |> set(key: \"_field\", value: \"Runability\")\nforecast = from(bucket: \"runability\") |> range(start: now(), stop: v.timeRangeStop) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"runability_forecast_hourly\" and r._field == \"score\") |> keep(columns: [\"_time\", \"_value\"]) |> set(key: \"_field\", value: \"Runability\")\nunion(tables: [measured, forecast]) |> group(columns: [\"_field\"]) |> sort(columns: [\"_time\"])"
-        },
-        {
-          "refId": "B",
-          "query": "from(bucket: \"runability\") |> range(start: v.timeRangeStart, stop: now()) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"runability_score\" and r._field == \"score\") |> last() |> map(fn: (r) => ({ r with _time: now(), _field: \"Current time\" }))"
-        }
-      ],
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "min": 0,
-          "max": 100,
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 40 },
-              { "color": "green", "value": 70 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 40
+              },
+              {
+                "color": "green",
+                "value": 70
+              }
             ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 17,
+      "options": {
+        "controls": {
+          "mouseWheelZoom": true,
+          "showAttribution": true,
+          "showDebug": false,
+          "showMeasure": false,
+          "showScale": true,
+          "showZoom": true
+        },
+        "layers": [
+          {
+            "config": {
+              "showLegend": true,
+              "style": {
+                "color": {
+                  "field": "score",
+                  "fixed": "green"
+                },
+                "size": {
+                  "fixed": 14,
+                  "max": 22,
+                  "min": 8
+                }
+              }
+            },
+            "location": {
+              "latitude": "latitude",
+              "longitude": "longitude",
+              "mode": "coords"
+            },
+            "name": "Runability locations",
+            "type": "markers"
+          }
+        ],
+        "tooltip": {
+          "mode": "details"
+        },
+        "view": {
+          "allLayers": true,
+          "id": "coords",
+          "lat": 47.4979,
+          "lon": 19.05,
+          "zoom": 12
+        }
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r._measurement == \"runability_score\") |> filter(fn: (r) => contains(value: r.location_id, set: [\"bme_campus\", \"budapest_downtown\", \"margaret_island\", \"kopaszi_gat\", \"obuda\"])) |> filter(fn: (r) => contains(value: r._field, set: [\"score\", \"latitude\", \"longitude\"])) |> group(columns: [\"location_id\", \"location_name\", \"_field\"]) |> last() |> group() |> pivot(rowKey: [\"location_id\", \"location_name\"], columnKey: [\"_field\"], valueColumn: \"_value\") |> filter(fn: (r) => exists r.latitude and exists r.longitude and exists r.score) |> keep(columns: [\"location_id\", \"location_name\", \"latitude\", \"longitude\", \"score\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Smart City Runability Map",
+      "type": "geomap"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "RunabilityInflux"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
             "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 3,
-            "fillOpacity": 8,
-            "showPoints": "auto",
             "pointSize": 5,
-            "spanNulls": true
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Current time"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "points"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 10
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 0
+              },
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": true,
+                  "tooltip": false,
+                  "viz": false
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "id": 18,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "query": "measured = from(bucket: \"runability\") |> range(start: v.timeRangeStart, stop: now()) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_raw\" and r._field == \"temperature_c\") |> keep(columns: [\"_time\", \"_value\"]) |> set(key: \"_field\", value: \"Temperature\")\nforecast = from(bucket: \"runability\") |> range(start: now(), stop: v.timeRangeStop) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_forecast_hourly\" and r._field == \"temperature_c\") |> keep(columns: [\"_time\", \"_value\"]) |> set(key: \"_field\", value: \"Temperature\")\nunion(tables: [measured, forecast]) |> group(columns: [\"_field\"]) |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        },
+        {
+          "query": "from(bucket: \"runability\") |> range(start: v.timeRangeStart, stop: now()) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_raw\" and r._field == \"temperature_c\") |> last() |> map(fn: (r) => ({ r with _time: now(), _field: \"Current time\" }))",
+          "refId": "B"
+        }
+      ],
+      "title": "Temperature: Measured + Forecast",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "RunabilityInflux"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
           }
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "Current time" },
+            "matcher": {
+              "id": "byName",
+              "options": "_time"
+            },
             "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } },
-              { "id": "custom.drawStyle", "value": "points" },
-              { "id": "custom.pointSize", "value": 10 },
-              { "id": "custom.showPoints", "value": "always" },
-              { "id": "custom.lineWidth", "value": 0 },
-              { "id": "custom.hideFrom", "value": { "tooltip": false, "viz": false, "legend": true } }
+              {
+                "id": "displayName",
+                "value": "Time of day"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "temperature_c"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Temperature"
+              },
+              {
+                "id": "unit",
+                "value": "celsius"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "humidity"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Humidity"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "precip_mm"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Rain forecast"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "wind_kmh"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Wind (km/h)"
+              }
             ]
           }
         ]
-      }
-    },
-    {
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 36
+      },
       "id": 14,
-      "type": "table",
-      "title": "Next 24 Hours Forecast",
-      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 40 },
-      "targets": [
-        {
-          "refId": "A",
-          "query": "from(bucket: \"runability\") |> range(start: now(), stop: 24h) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_forecast_hourly\") |> filter(fn: (r) => contains(value: r._field, set: [\"temperature_c\", \"humidity\", \"wind_kmh\", \"precip_mm\"])) |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\") |> keep(columns: [\"_time\", \"temperature_c\", \"humidity\", \"precip_mm\", \"wind_kmh\"]) |> sort(columns: [\"_time\"])"
-        }
-      ],
       "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
         "showHeader": true
       },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "query": "from(bucket: \"runability\") |> range(start: now(), stop: 24h) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_forecast_hourly\") |> filter(fn: (r) => contains(value: r._field, set: [\"temperature_c\", \"humidity\", \"wind_kmh\", \"precip_mm\"])) |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\") |> keep(columns: [\"_time\", \"temperature_c\", \"humidity\", \"precip_mm\", \"wind_kmh\"]) |> sort(columns: [\"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Next 24 Hours Forecast",
       "transformations": [
         {
           "id": "organize",
@@ -326,78 +1148,150 @@
             "excludeByName": {},
             "indexByName": {
               "_time": 0,
-              "temperature_c": 1,
               "humidity": 2,
               "precip_mm": 3,
+              "temperature_c": 1,
               "wind_kmh": 4
             },
             "renameByName": {
               "_time": "Time of day",
-              "temperature_c": "Temperature",
               "humidity": "Humidity",
               "precip_mm": "Rain forecast",
+              "temperature_c": "Temperature",
               "wind_kmh": "Wind (km/h)"
             }
           }
         }
       ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "RunabilityInflux"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {
             "align": "auto",
-            "cellOptions": { "type": "auto" }
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
           }
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "_time" },
+            "matcher": {
+              "id": "byName",
+              "options": "day"
+            },
             "properties": [
-              { "id": "displayName", "value": "Time of day" }
+              {
+                "id": "displayName",
+                "value": "Day"
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "temperature_c" },
+            "matcher": {
+              "id": "byName",
+              "options": "temp_max_c"
+            },
             "properties": [
-              { "id": "displayName", "value": "Temperature" },
-              { "id": "unit", "value": "celsius" }
+              {
+                "id": "displayName",
+                "value": "Max. temperature"
+              },
+              {
+                "id": "unit",
+                "value": "celsius"
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "humidity" },
+            "matcher": {
+              "id": "byName",
+              "options": "temp_min_c"
+            },
             "properties": [
-              { "id": "displayName", "value": "Humidity" }
+              {
+                "id": "displayName",
+                "value": "Min. temperature"
+              },
+              {
+                "id": "unit",
+                "value": "celsius"
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "precip_mm" },
+            "matcher": {
+              "id": "byName",
+              "options": "precip_sum_mm"
+            },
             "properties": [
-              { "id": "displayName", "value": "Rain forecast" }
+              {
+                "id": "displayName",
+                "value": "Rain forecast"
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "wind_kmh" },
+            "matcher": {
+              "id": "byName",
+              "options": "wind_max_kmh"
+            },
             "properties": [
-              { "id": "displayName", "value": "Wind (km/h)" }
+              {
+                "id": "displayName",
+                "value": "Wind (km/h)"
+              }
             ]
           }
         ]
-      }
-    },
-    {
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 46
+      },
       "id": 15,
-      "type": "table",
-      "title": "Week Forecast",
-      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 50 },
-      "targets": [
-        {
-          "refId": "A",
-          "query": "import \"strings\"\nfrom(bucket: \"runability\") |> range(start: -12h, stop: 8d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_forecast_daily\") |> filter(fn: (r) => contains(value: r._field, set: [\"temp_min_c\", \"temp_max_c\", \"precip_sum_mm\", \"wind_max_kmh\"])) |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\") |> sort(columns: [\"_time\"]) |> map(fn: (r) => ({ r with day: strings.substring(v: string(v: r._time), start: 0, end: 10) })) |> keep(columns: [\"day\", \"temp_max_c\", \"temp_min_c\", \"precip_sum_mm\", \"wind_max_kmh\"])"
-        }
-      ],
       "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
         "showHeader": true
       },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "query": "import \"strings\"\nfrom(bucket: \"runability\") |> range(start: -12h, stop: 8d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"weather_forecast_daily\") |> filter(fn: (r) => contains(value: r._field, set: [\"temp_min_c\", \"temp_max_c\", \"precip_sum_mm\", \"wind_max_kmh\"])) |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\") |> sort(columns: [\"_time\"]) |> map(fn: (r) => ({ r with day: strings.substring(v: string(v: r._time), start: 0, end: 10) })) |> keep(columns: [\"day\", \"temp_max_c\", \"temp_min_c\", \"precip_sum_mm\", \"wind_max_kmh\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Week Forecast",
       "transformations": [
         {
           "id": "organize",
@@ -405,208 +1299,29 @@
             "excludeByName": {},
             "indexByName": {
               "day": 0,
+              "precip_sum_mm": 3,
               "temp_max_c": 1,
               "temp_min_c": 2,
-              "precip_sum_mm": 3,
               "wind_max_kmh": 4
             },
             "renameByName": {
               "day": "Day",
+              "precip_sum_mm": "Rain forecast",
               "temp_max_c": "Max. temperature",
               "temp_min_c": "Min. temperature",
-              "precip_sum_mm": "Rain forecast",
               "wind_max_kmh": "Wind (km/h)"
             }
           }
         }
       ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": { "type": "auto" }
-          }
-        },
-        "overrides": [
-          {
-            "matcher": { "id": "byName", "options": "day" },
-            "properties": [
-              { "id": "displayName", "value": "Day" }
-            ]
-          },
-          {
-            "matcher": { "id": "byName", "options": "temp_max_c" },
-            "properties": [
-              { "id": "displayName", "value": "Max. temperature" },
-              { "id": "unit", "value": "celsius" }
-            ]
-          },
-          {
-            "matcher": { "id": "byName", "options": "temp_min_c" },
-            "properties": [
-              { "id": "displayName", "value": "Min. temperature" },
-              { "id": "unit", "value": "celsius" }
-            ]
-          },
-          {
-            "matcher": { "id": "byName", "options": "precip_sum_mm" },
-            "properties": [
-              { "id": "displayName", "value": "Rain forecast" }
-            ]
-          },
-          {
-            "matcher": { "id": "byName", "options": "wind_max_kmh" },
-            "properties": [
-              { "id": "displayName", "value": "Wind (km/h)" }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": 10,
-      "type": "stat",
-      "title": "Limiting Reason",
-      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
-      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 8 },
-      "targets": [
-        {
-          "refId": "A",
-          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"runability_score\" and r._field == \"limiting_reason_code\") |> last()"
-        }
-      ],
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "textMode": "value",
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": { "color": "green", "index": 0, "text": "Good" },
-                "1": { "color": "blue", "index": 1, "text": "Low temp" },
-                "2": { "color": "orange", "index": 2, "text": "High temp" },
-                "3": { "color": "red", "index": 3, "text": "Bad air" },
-                "4": { "color": "orange", "index": 4, "text": "High humidity" },
-                "5": { "color": "blue", "index": 5, "text": "Raining" },
-                "6": { "color": "yellow", "index": 6, "text": "Windy" }
-              }
-            }
-          ],
-          "custom": {}
-        }
-      }
-    },
-    {
-      "id": 11,
-      "type": "stat",
-      "title": "Recommendation",
-      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
-      "gridPos": { "h": 6, "w": 10, "x": 6, "y": 8 },
-      "targets": [
-        {
-          "refId": "A",
-          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"runability_score\" and r._field == \"recommendation_code\") |> last()"
-        }
-      ],
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "textMode": "value",
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": { "color": "red", "index": 0, "text": "Not recommended now" },
-                "1": { "color": "orange", "index": 1, "text": "Short/light activity only" },
-                "2": { "color": "yellow", "index": 2, "text": "Okay with caution" },
-                "3": { "color": "green", "index": 3, "text": "Great for run/walk" }
-              }
-            }
-          ],
-          "custom": {}
-        }
-      }
-    },
-    {
-      "id": 12,
-      "type": "bargauge",
-      "title": "Score Factors",
-      "datasource": { "type": "influxdb", "uid": "RunabilityInflux" },
-      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 8 },
-      "targets": [
-        {
-          "refId": "A",
-          "query": "from(bucket: \"runability\") |> range(start: -7d) |> filter(fn: (r) => r.location_id == \"${location_id}\") |> filter(fn: (r) => r._measurement == \"runability_score\") |> filter(fn: (r) => contains(value: r._field, set: [\"temperature_score\", \"humidity_score\", \"wind_score\", \"air_quality_score\", \"rain_score\"])) |> last()"
-        }
-      ],
-      "options": {
-        "displayMode": "gradient",
-        "orientation": "horizontal",
-        "reduceOptions": { "calcs": ["lastNotNull"], "values": false },
-        "showUnfilled": true
-      },
-      "fieldConfig": {
-        "defaults": {
-          "min": 0,
-          "max": 100,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 40 },
-              { "color": "green", "value": 75 }
-            ]
-          },
-          "custom": {}
-        },
-        "overrides": [
-          {
-            "matcher": { "id": "byName", "options": "temperature_score" },
-            "properties": [
-              { "id": "displayName", "value": "Temp" }
-            ]
-          },
-          {
-            "matcher": { "id": "byName", "options": "humidity_score" },
-            "properties": [
-              { "id": "displayName", "value": "Humidity" }
-            ]
-          },
-          {
-            "matcher": { "id": "byName", "options": "wind_score" },
-            "properties": [
-              { "id": "displayName", "value": "Wind" }
-            ]
-          },
-          {
-            "matcher": { "id": "byName", "options": "air_quality_score" },
-            "properties": [
-              { "id": "displayName", "value": "Air" }
-            ]
-          },
-          {
-            "matcher": { "id": "byName", "options": "rain_score" },
-            "properties": [
-              { "id": "displayName", "value": "Rain" }
-            ]
-          }
-        ]
-      }
+      "type": "table"
     }
   ],
   "schemaVersion": 39,
-  "tags": ["runability", "homework"],
+  "tags": [
+    "runability",
+    "homework"
+  ],
   "templating": {
     "list": [
       {
@@ -621,20 +1336,47 @@
         "multi": false,
         "name": "location_id",
         "options": [
-          { "selected": true, "text": "BME Campus", "value": "bme_campus" },
-          { "selected": false, "text": "Budapest Downtown", "value": "budapest_downtown" },
-          { "selected": false, "text": "Margaret Island", "value": "margaret_island" },
-          { "selected": false, "text": "Kopaszi-gat", "value": "kopaszi_gat" },
-          { "selected": false, "text": "Óbuda (3rd District)", "value": "obuda" }
+          {
+            "selected": true,
+            "text": "BME Campus",
+            "value": "bme_campus"
+          },
+          {
+            "selected": false,
+            "text": "Budapest Downtown",
+            "value": "budapest_downtown"
+          },
+          {
+            "selected": false,
+            "text": "Margaret Island",
+            "value": "margaret_island"
+          },
+          {
+            "selected": false,
+            "text": "Kopaszi-gat",
+            "value": "kopaszi_gat"
+          },
+          {
+            "selected": false,
+            "text": "Óbuda (3rd District)",
+            "value": "obuda"
+          }
         ],
         "query": "BME Campus : bme_campus,Budapest Downtown : budapest_downtown,Margaret Island : margaret_island,Kopaszi-gat : kopaszi_gat,Óbuda (3rd District) : obuda",
+        "queryValue": "",
+        "skipUrlSync": false,
         "type": "custom"
       }
     ]
   },
-  "time": { "from": "now/d", "to": "now/d+1d" },
+  "time": {
+    "from": "now/d",
+    "to": "now/d+1d"
+  },
+  "timepicker": {},
   "timezone": "browser",
   "title": "Runability Homework Dashboard",
   "uid": "runability-overview",
-  "version": 3
+  "version": 1,
+  "weekStart": ""
 }
