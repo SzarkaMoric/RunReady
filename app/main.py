@@ -539,7 +539,7 @@ def main() -> None:
         while True:
             try:
                 collect_all_locations(config, writer)
-                print("Sleeping for 15 minutes...")
+                print("Sleeping for 5 minutes...")
 
             except Exception as e:
                 print(f"Error during data collection: {e}")
@@ -547,7 +547,7 @@ def main() -> None:
                 time.sleep(300)  # Retry after 5 minutes on error
                 continue
 
-            time.sleep(900)  # 15 minutes
+            time.sleep(300)  # 5 minutes
 
     except KeyboardInterrupt:
         print("Shutting down...")
